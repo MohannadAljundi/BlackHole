@@ -25,8 +25,8 @@ import 'package:blackhole/CustomWidgets/snackbar.dart';
 import 'package:blackhole/CustomWidgets/song_tile_trailing_menu.dart';
 import 'package:blackhole/Models/image_quality.dart';
 import 'package:blackhole/Services/player_service.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HorizontalAlbumsList extends StatelessWidget {
   final List songsList;

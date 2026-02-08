@@ -17,8 +17,9 @@
  * Copyright (c) 2021-2023, Ankit Sangwan
  */
 
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:logging/logging.dart';
 
 class ShowSnackBar {

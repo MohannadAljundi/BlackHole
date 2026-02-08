@@ -22,8 +22,9 @@ import 'package:blackhole/CustomWidgets/bouncy_sliver_scroll_view.dart';
 import 'package:blackhole/CustomWidgets/empty_screen.dart';
 import 'package:blackhole/CustomWidgets/gradient_containers.dart';
 import 'package:blackhole/Screens/Player/audioplayer.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:get_it/get_it.dart';
 
 class NowPlaying extends StatefulWidget {

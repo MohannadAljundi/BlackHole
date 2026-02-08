@@ -18,9 +18,10 @@
  */
 
 import 'package:audio_service/audio_service.dart';
-import 'package:blackhole/Screens/Player/audioplayer.dart';
 import 'package:blackhole/Services/audio_service.dart';
 import 'package:flutter/material.dart';
+
+import '../Screens/Player/audioplayer.dart';
 
 class AudioHandlerHelper {
   static final AudioHandlerHelper _instance = AudioHandlerHelper._internal();

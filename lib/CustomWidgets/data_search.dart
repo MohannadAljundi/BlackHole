@@ -22,9 +22,10 @@ import 'package:blackhole/CustomWidgets/image_card.dart';
 import 'package:blackhole/CustomWidgets/song_tile_trailing_menu.dart';
 import 'package:blackhole/Helpers/audio_query.dart';
 import 'package:blackhole/Services/player_service.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:on_audio_query/on_audio_query.dart';
 
 class DataSearch extends SearchDelegate {

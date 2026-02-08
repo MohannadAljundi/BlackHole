@@ -7,9 +7,10 @@ import 'package:blackhole/Screens/Settings/download.dart';
 import 'package:blackhole/Screens/Settings/music_playback.dart';
 import 'package:blackhole/Screens/Settings/others.dart';
 import 'package:blackhole/Screens/Settings/theme.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:hive_flutter/adapters.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 

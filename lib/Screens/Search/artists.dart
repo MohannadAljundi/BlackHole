@@ -33,8 +33,9 @@ import 'package:blackhole/CustomWidgets/song_tile_trailing_menu.dart';
 import 'package:blackhole/Models/url_image_generator.dart';
 import 'package:blackhole/Screens/Common/song_list.dart';
 import 'package:blackhole/Services/player_service.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:share_plus/share_plus.dart';
 
 class ArtistSearchPage extends StatefulWidget {

@@ -23,8 +23,9 @@ import 'package:blackhole/CustomWidgets/drawer.dart';
 import 'package:blackhole/Screens/Library/liked.dart';
 import 'package:blackhole/Screens/LocalMusic/downed_songs.dart';
 import 'package:blackhole/Screens/LocalMusic/downed_songs_desktop.dart';
+import 'package:blackhole/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class LibraryPage extends StatefulWidget {
