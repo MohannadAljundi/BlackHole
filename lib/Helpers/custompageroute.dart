@@ -42,7 +42,7 @@ class FadeTransitionPageRoute extends PageRouteBuilder {
       opacity: animation,
       child: child,
     );
-  }
+  } // SQA test change
 }
 
 class SlideTransitionPageRoute extends PageRouteBuilder {
