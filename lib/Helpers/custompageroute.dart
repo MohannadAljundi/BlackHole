@@ -42,7 +42,7 @@ class FadeTransitionPageRoute extends PageRouteBuilder {
       opacity: animation,
       child: child,
     );
-  } // SQA test change
+  }
 }
 
 class SlideTransitionPageRoute extends PageRouteBuilder {
@@ -68,8 +68,6 @@ class SlideTransitionPageRoute extends PageRouteBuilder {
       case AxisDirection.left:
         return const Offset(-1, 0);
       case AxisDirection.right:
-        return const Offset(1, 0);
-      default:
         return const Offset(1, 0);
     }
   }

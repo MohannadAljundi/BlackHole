@@ -216,7 +216,6 @@ class _DownloadsState extends State<Downloads>
               .toUpperCase()
               .compareTo(b['dateAdded'].toString().toUpperCase()),
         );
-        break;
     }
 
     if (order == 1) {

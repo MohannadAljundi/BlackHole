@@ -1,6 +1,5 @@
+import 'package:blackhole/Models/image_quality.dart';
 import 'package:hive/hive.dart';
-
-import 'image_quality.dart';
 
 class UrlImageGetter {
   final List<String?> _imageUrls;

@@ -74,6 +74,28 @@ class Download with ChangeNotifier {
       Hive.box('settings').get('downloadLyrics', defaultValue: false) as bool;
   bool download = true;
 
+  Future<void> _requestStoragePermissionIfNeeded() async {
+    if (!(Platform.isAndroid || Platform.isIOS)) return;
+
+    Logger.root.info('Requesting storage permission');
+    PermissionStatus status = await Permission.storage.status;
+
+    if (status.isDenied) {
+      Logger.root.info('Request denied');
+      await [
+        Permission.storage,
+        Permission.accessMediaLocation,
+        Permission.mediaLibrary,
+      ].request();
+    }
+
+    status = await Permission.storage.status;
+    if (status.isPermanentlyDenied) {
+      Logger.root.info('Request permanently denied');
+      await openAppSettings();
+    }
+  }
+
   Future<void> prepareDownload(
     BuildContext context,
     Map data, {
@@ -82,23 +104,7 @@ class Download with ChangeNotifier {
   }) async {
     Logger.root.info('Preparing download for ${data['title']}');
     download = true;
-    if (Platform.isAndroid || Platform.isIOS) {
-      Logger.root.info('Requesting storage permission');
-      PermissionStatus status = await Permission.storage.status;
-      if (status.isDenied) {
-        Logger.root.info('Request denied');
-        await [
-          Permission.storage,
-          Permission.accessMediaLocation,
-          Permission.mediaLibrary,
-        ].request();
-      }
-      status = await Permission.storage.status;
-      if (status.isPermanentlyDenied) {
-        Logger.root.info('Request permanently denied');
-        await openAppSettings();
-      }
-    }
+    await _requestStoragePermissionIfNeeded();
     final RegExp avoid = RegExp(r'[\.\\\*\:\"\?#/;\|]');
     data['title'] = data['title'].toString().split('(From')[0].trim();
 
@@ -158,15 +164,17 @@ class Download with ChangeNotifier {
         switch (rememberOption) {
           case 0:
             lastDownloadId = data['id'].toString();
+            break;
+
           case 1:
             downloadSong(context, dlPath, filename, data);
+            break;
           case 2:
             while (await File('$dlPath/$filename').exists()) {
               filename = filename.replaceAll('.m4a', ' (1).m4a');
             }
           default:
             lastDownloadId = data['id'].toString();
-            break;
         }
       } else {
         showDialog(

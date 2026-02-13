@@ -105,7 +105,6 @@ class _SongsListState extends State<SongsList> {
               .toUpperCase()
               .compareTo(b['dateAdded'].toString().toUpperCase()),
         );
-        break;
     }
 
     if (order == 1) {
