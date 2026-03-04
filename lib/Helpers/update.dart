@@ -19,22 +19,24 @@
 
 import 'package:logging/logging.dart';
 
-bool compareVersion(String latestVersion, String currentVersion) {
-  bool update = false;
-  final List latestList = latestVersion.split('.');
-  final List currentList = currentVersion.split('.');
+bool compareVersion(String currentVersion, String latestVersion) {
+  List<int> parse(String v) {
+    final cleaned = v.trim().replaceAll(RegExp(r'[^0-9.]'), '');
+    final parts = cleaned.split('.').where((e) => e.isNotEmpty).toList();
 
-  for (int i = 0; i < latestList.length; i++) {
-    try {
-      if (int.parse(latestList[i] as String) >
-          int.parse(currentList[i] as String)) {
-        update = true;
-        break;
-      }
-    } catch (e) {
-      Logger.root.severe('Error while comparing versions: $e');
-      break;
+    while (parts.length < 3) {
+      parts.add('0');
     }
+
+    return parts.take(3).map((e) => int.tryParse(e) ?? 0).toList();
   }
-  return update;
+
+  final c = parse(currentVersion);
+  final l = parse(latestVersion);
+
+  for (int i = 0; i < 3; i++) {
+    if (l[i] > c[i]) return true;
+    if (l[i] < c[i]) return false;
+  }
+  return false;
 }

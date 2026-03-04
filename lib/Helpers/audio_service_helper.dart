@@ -24,28 +24,30 @@ import 'package:blackhole/Helpers/mediaitem_converter.dart';
 import 'package:flutter/material.dart';
 
 void showSongInfo(MediaItem mediaItem, BuildContext context) {
-  final Map details = MediaItemConverter.mediaItemToMap(
-    mediaItem,
-  );
+  final Map<String, dynamic> details =
+      Map<String, dynamic>.from(MediaItemConverter.mediaItemToMap(mediaItem));
+  final int durationSeconds =
+      int.tryParse(details['duration']?.toString() ?? '') ?? 0;
+  final int mins = durationSeconds ~/ 60;
+  final int secs = durationSeconds % 60;
   details['duration'] =
-      '${(int.parse(details["duration"].toString()) ~/ 60).toString().padLeft(2, "0")}:${(int.parse(details["duration"].toString()) % 60).toString().padLeft(2, "0")}';
+      '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   // style: Theme.of(context).textTheme.caption,
-  if (mediaItem.extras?['size'] != null) {
-    details.addEntries([
-      MapEntry(
-        'date_modified',
-        DateTime.fromMillisecondsSinceEpoch(
-          int.parse(
-                mediaItem.extras!['date_modified'].toString(),
-              ) *
-              1000,
-        ).toString().split('.').first,
-      ),
-      MapEntry(
-        'size',
-        '${((mediaItem.extras!['size'] as int) / (1024 * 1024)).toStringAsFixed(2)} MB',
-      ),
-    ]);
+  final extras = mediaItem.extras;
+
+  if (extras != null) {
+    final int sizeBytes = int.tryParse(extras['size']?.toString() ?? '') ?? 0;
+    if (sizeBytes > 0) {
+      details['size'] = '${(sizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+    }
+
+    final int modifiedSeconds =
+        int.tryParse(extras['date_modified']?.toString() ?? '') ?? 0;
+    if (modifiedSeconds > 0) {
+      details['date_modified'] = DateTime.fromMillisecondsSinceEpoch(
+        modifiedSeconds * 1000,
+      ).toString().split('.').first;
+    }
   }
   PopupDialog().showPopup(
     context: context,
@@ -86,7 +88,7 @@ void showSongInfo(MediaItem mediaItem, BuildContext context) {
                   ],
                 ),
                 showCursor: true,
-                cursorColor: Colors.black,
+                cursorColor: Theme.of(context).colorScheme.onSurface,
                 cursorRadius: const Radius.circular(
                   5,
                 ),

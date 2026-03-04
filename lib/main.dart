@@ -1,27 +1,27 @@
 /*
- *  This file is part of BlackHole (https://github.com/Sangwan5688/BlackHole).
- * 
- * BlackHole is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * BlackHole is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with BlackHole.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * Copyright (c) 2021-2023, Ankit Sangwan
- */
+  *  This file is part of BlackHole (https://github.com/Sangwan5688/BlackHole).
+  * 
+  * BlackHole is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU Lesser General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * BlackHole is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  * GNU Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public License
+  * along with BlackHole.  If not, see <http://www.gnu.org/licenses/>.
+  * 
+  * Copyright (c) 2021-2023, Ankit Sangwan
+  */
 
 import 'dart:async';
 import 'dart:io';
 
 import 'package:blackhole/Helpers/config.dart';
-import 'package:blackhole/Helpers/handle_native.dart';
+
 import 'package:blackhole/Helpers/import_export_playlist.dart';
 import 'package:blackhole/Helpers/logging.dart';
 import 'package:blackhole/Helpers/route_handler.dart';
@@ -32,6 +32,7 @@ import 'package:blackhole/constants/languagecodes.dart';
 import 'package:blackhole/localization/app_localizations.dart';
 import 'package:blackhole/providers/audio_service_provider.dart';
 import 'package:blackhole/theme/app_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -48,26 +49,47 @@ import 'package:sizer/sizer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Paint.enableDithering = true; No longer needed
 
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    await Hive.initFlutter('BlackHole/Database');
-  } else if (Platform.isIOS) {
-    await Hive.initFlutter('Database');
-  } else {
-    await Hive.initFlutter();
-  }
-  for (final box in hiveBoxes) {
-    await openHiveBox(
-      box['name'].toString(),
-      limit: box['limit'] as bool? ?? false,
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+    Logger.root.severe(
+      'FlutterError',
+      details.exception,
+      details.stack,
     );
-  }
-  if (Platform.isAndroid) {
-    setOptimalDisplayMode();
-  }
-  await startService();
-  runApp(MyApp());
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    Logger.root.severe('Unhandled async error', error, stack);
+    return true;
+  };
+
+  await runZonedGuarded(() async {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      await Hive.initFlutter('BlackHole/Database');
+    } else if (Platform.isIOS) {
+      await Hive.initFlutter('Database');
+    } else {
+      await Hive.initFlutter();
+    }
+
+    for (final box in hiveBoxes) {
+      await openHiveBox(
+        box['name'].toString(),
+        limit: box['limit'] as bool? ?? false,
+      );
+    }
+
+    if (Platform.isAndroid) {
+      await setOptimalDisplayMode();
+    }
+
+    await startService();
+
+    runApp(MyApp());
+  }, (error, stack) {
+    Logger.root.severe('Zone error', error, stack);
+  });
 }
 
 Future<void> setOptimalDisplayMode() async {
@@ -190,32 +212,9 @@ class _MyAppState extends State<MyApp> {
     });
 
     if (Platform.isAndroid || Platform.isIOS) {
-      // For sharing or opening urls/text coming from outside the app while the app is in the memory
-      _intentTextStreamSubscription =
-          ReceiveSharingIntent.getTextStream().listen(
-        (String value) {
-          Logger.root.info('Received intent on stream: $value');
-          handleSharedText(value, navigatorKey);
-        },
-        onError: (err) {
-          Logger.root.severe('ERROR in getTextStream', err);
-        },
-      );
-
-      // For sharing or opening urls/text coming from outside the app while the app is closed
-      ReceiveSharingIntent.getInitialText().then(
-        (String? value) {
-          Logger.root.info('Received Intent initially: $value');
-          if (value != null) handleSharedText(value, navigatorKey);
-        },
-        onError: (err) {
-          Logger.root.severe('ERROR in getInitialTextStream', err);
-        },
-      );
-
       // For sharing files coming from outside the app while the app is in the memory
       _intentDataStreamSubscription =
-          ReceiveSharingIntent.getMediaStream().listen(
+          ReceiveSharingIntent.instance.getMediaStream().listen(
         (List<SharedMediaFile> value) {
           if (value.isNotEmpty) {
             for (final file in value) {
@@ -242,7 +241,8 @@ class _MyAppState extends State<MyApp> {
       );
 
       // For sharing files coming from outside the app while the app is closed
-      ReceiveSharingIntent.getInitialMedia()
+      ReceiveSharingIntent.instance
+          .getInitialMedia()
           .then((List<SharedMediaFile> value) {
         if (value.isNotEmpty) {
           for (final file in value) {

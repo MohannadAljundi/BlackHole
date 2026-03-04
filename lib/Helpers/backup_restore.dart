@@ -29,6 +29,7 @@ import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path/path.dart' as p;
 
 Future<String> createBackup(
   BuildContext context,
@@ -61,28 +62,30 @@ Future<String> createBackup(
     try {
       final saveDir = Directory(savePath);
       final dirExists = await saveDir.exists();
-      if (!dirExists) saveDir.create(recursive: true);
+      if (!dirExists) await saveDir.create(recursive: true);
       final List<File> files = [];
-      final List boxNames = [];
+      final Set<String> boxNames = {};
 
-      for (int i = 0; i < items.length; i++) {
-        boxNames.addAll(boxNameData[items[i]]!);
+      for (final item in items) {
+        final list = boxNameData[item];
+        if (list == null) continue;
+        boxNames.addAll(list.map((e) => e.toString()));
       }
 
-      for (int i = 0; i < boxNames.length; i++) {
-        await Hive.openBox(boxNames[i].toString());
+      for (final boxName in boxNames) {
+        await Hive.openBox(boxName);
+
+        final String hivePath = Hive.box(boxName).path!;
+        final String outPath = '$savePath/$boxName.hive';
+
         try {
-          await File(Hive.box(boxNames[i].toString()).path!)
-              .copy('$savePath/${boxNames[i]}.hive');
+          await File(hivePath).copy(outPath);
         } catch (e) {
-          await [
-            Permission.manageExternalStorage,
-          ].request();
-          await File(Hive.box(boxNames[i].toString()).path!)
-              .copy('$savePath/${boxNames[i]}.hive');
+          await [Permission.manageExternalStorage].request();
+          await File(hivePath).copy(outPath);
         }
 
-        files.add(File('$savePath/${boxNames[i]}.hive'));
+        files.add(File(outPath));
       }
 
       final now = DateTime.now();
@@ -100,8 +103,10 @@ Future<String> createBackup(
         files: files,
         zipFile: zipFile,
       );
-      for (int i = 0; i < files.length; i++) {
-        files[i].delete();
+      for (final f in files) {
+        if (await f.exists()) {
+          await f.delete();
+        }
       }
       if (showDialog) {
         ShowSnackBar().showSnackBar(
@@ -142,7 +147,10 @@ Future<void> restore(
     if (isZip || savePath.endsWith('.hive')) {
       final File zipFile = File(savePath);
       final Directory tempDir = await getTemporaryDirectory();
-      Directory destinationDir = Directory('${tempDir.path}/restore');
+      Directory destinationDir = Directory(p.join(tempDir.path, 'restore'));
+      if (!await destinationDir.exists()) {
+        await destinationDir.create(recursive: true);
+      }
 
       try {
         if (isZip) {
@@ -153,10 +161,8 @@ Future<void> restore(
           );
         } else {
           Logger.root.info('Hive file is selected');
-          final splitPath = savePath.split('/');
-          splitPath.removeLast();
-          Logger.root.info('Changing path to ${splitPath.join("/")}');
-          destinationDir = Directory(splitPath.join('/'));
+          destinationDir = Directory(p.dirname(savePath));
+          Logger.root.info('Changing path to ${destinationDir.path}');
         }
         final List<FileSystemEntity> files = await destinationDir
             .list()
@@ -166,8 +172,7 @@ Future<void> restore(
 
         for (int i = 0; i < files.length; i++) {
           final String backupPath = files[i].path;
-          final String boxName =
-              backupPath.split('/').last.replaceAll('.hive', '');
+          final String boxName = p.basenameWithoutExtension(backupPath);
           final Box box = await Hive.openBox(boxName);
           final String boxPath = box.path!;
           await box.close();
@@ -205,4 +210,25 @@ Future<void> restore(
       AppLocalizations.of(context)!.noFileSelected,
     );
   }
+}
+
+List<String> collectBoxNames(
+  List items,
+  Map<String, List> boxNameData,
+) {
+  final result = <String>[];
+
+  for (final item in items) {
+    final boxes = boxNameData[item];
+    if (boxes != null) {
+      result.addAll(boxes.map((e) => e.toString()));
+    }
+  }
+
+  return result;
+}
+
+bool isSupportedBackupFile(String path) {
+  final cleaned = path.trim().toLowerCase();
+  return cleaned.endsWith('.zip') || cleaned.endsWith('.hive');
 }

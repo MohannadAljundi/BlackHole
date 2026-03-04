@@ -23,16 +23,42 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 Future<void> downloadChecker() async {
-  final List songs = Hive.box('downloads').values.toList();
-  final List<String> keys = await compute(checkPaths, songs);
-  await Hive.box('downloads').deleteAll(keys);
+  if (kIsWeb) return;
+
+  final box = Hive.box('downloads');
+
+  final List<Map<String, String>> songs = box.values
+      .whereType<Map>()
+      .map((dynamic e) => <String, String>{
+            'id': (e['id'] ?? '').toString(),
+            'path': (e['path'] ?? '').toString(),
+          })
+      .toList(growable: false);
+
+  if (songs.isEmpty) return;
+
+  final List<String> keysToDelete = await compute(_checkPathsSync, songs);
+
+  if (keysToDelete.isNotEmpty) {
+    await box.deleteAll(keysToDelete);
+  }
 }
 
-Future<List<String>> checkPaths(List songs) async {
+List<String> _checkPathsSync(List<Map<String, String>> songs) {
   final List<String> res = [];
   for (final song in songs) {
-    final bool value = await File(song['path'].toString()).exists();
-    if (!value) res.add(song['id'].toString());
+    final String id = song['id'] ?? '';
+    final String path = song['path'] ?? '';
+    if (id.isEmpty || path.isEmpty) {
+      if (id.isNotEmpty) res.add(id);
+      continue;
+    }
+    try {
+      final exists = File(path).existsSync();
+      if (!exists) res.add(id);
+    } catch (_) {
+      res.add(id);
+    }
   }
   return res;
 }

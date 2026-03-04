@@ -23,7 +23,7 @@ dependencies:
   dart_des: ^1.0.2
   device_info_plus: ^9.1.1
   # ffmpeg_kit_flutter_audio: ^6.0.3
-  file_picker: ^6.1.1
+  file_picker: ^5.2.11 
   flip_card: ^0.7.0
   flutter:
     sdk: flutter
@@ -84,3 +84,7 @@ msix_config:
   icons_background_color: transparent
   logo_path: assets/ic_launcher.png
   file_extension: .mp3, .m4a
+
+  
+dependency_overrides:
+  win32: ^5.5.0
